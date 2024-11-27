@@ -1,0 +1,23 @@
+<resources>
+
+    <style name="Base.Theme.StudyTask" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorPrimaryContainer">@color/primary_container_color</item>
+        <item name="colorSecondary">@color/secondary_color</item>
+        <item name="colorSecondaryContainer">@color/secondary_container_color</item>
+        <item name="colorSurface">@color/surface_color</item>
+        <item name="colorError">@color/error_color</item>
+
+        <!-- Remover a transparência da barra de status -->
+        <!-- Aqui você pode definir a cor desejada para a barra de status -->
+        <item name="android:statusBarColor">@color/primary_color</item> <!-- Exemplo de cor -->
+
+        <!-- Remover as configurações de navegação e status transparentes -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+    </style>
+
+    <!-- Tema principal da aplicação -->
+    <style name="Theme.StudyTask" parent="Base.Theme.StudyTask" />
+</resources>
+

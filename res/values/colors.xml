@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores básicas -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Cores primárias -->
+    <color name="primary_color">#6200EE</color>
+    <color name="primary_dark">#3700B3</color>
+    <color name="primary_container_color">#BB86FC</color>
+
+    <!-- Cores secundárias -->
+    <color name="secondary_color">#03DAC5</color>
+    <color name="secondary_container_color">#018786</color>
+
+    <!-- Fundo e superfície -->
+    <color name="background_color">#FFFFFF</color>
+    <color name="surface_color">#FFFFFF</color>
+
+    <!-- Cores de erro -->
+    <color name="error_color">#B00020</color>
+</resources>
