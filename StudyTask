@@ -1,0 +1,201 @@
+
+MainActivity.KT
+
+
+import android.Manifest
+import android.app.DownloadManager
+import android.content.Context
+import android.graphics.Color
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.webkit.*
+import android.widget.FrameLayout
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.messaging.FirebaseMessaging
+
+class MainActivity : AppCompatActivity() {
+    private var customView: View? = null
+    private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+    private lateinit var fullScreenContainer: FrameLayout
+    private lateinit var webView: WebView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContentView(R.layout.activity_main)
+
+        // Inicializar Firebase para notificações
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d("FirebaseToken", "Token gerado: $token")
+            } else {
+                Log.e("FirebaseToken", "Erro ao obter token", task.exception)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            window.statusBarColor = Color.TRANSPARENT
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
+        }
+
+        fullScreenContainer = findViewById(R.id.fullscreen_container)
+        webView = findViewById(R.id.webview)
+
+        val webSettings = webView.settings
+        webSettings.javaScriptEnabled = true
+        webSettings.domStorageEnabled = true
+        webSettings.allowFileAccess = true
+        webSettings.allowContentAccess = true
+        webSettings.cacheMode = WebSettings.LOAD_DEFAULT
+
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetworkInfo
+
+        if (activeNetwork != null && activeNetwork.isConnected) {
+            webView.loadUrl("https://studytask-ai.github.io/StudyTask-Mobile/")
+        } else {
+            webView.loadData("<html><body><h1>Offline</h1><p>Sem conexão com a internet.</p></body></html>", "text/html", "UTF-8")
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                if (url != null && url.contains("sucesso")) {
+                    view?.loadUrl("https://www.google.com")
+                    return true
+                }
+                return false
+            }
+        }
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onReceivedTitle(view: WebView?, title: String?) {
+                super.onReceivedTitle(view, title)
+                title?.let {
+                    window.statusBarColor = if (it.contains("Login")) {
+                        Color.parseColor("#FF5722")
+                    } else {
+                        Color.TRANSPARENT
+                    }
+                }
+            }
+        }
+
+        webView.setDownloadListener { url, _, _, _, _ ->
+            val request = DownloadManager.Request(Uri.parse(url))
+            request.allowScanningByMediaScanner()
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            downloadManager.enqueue(request)
+        }
+    }
+
+    override fun onBackPressed() {
+        if (customView != null) {
+            onHideCustomView()
+        } else if (webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    private fun onHideCustomView() {
+        if (customView != null) {
+            fullScreenContainer.removeView(customView)
+            customView = null
+            fullScreenContainer.visibility = View.GONE
+            webView.visibility = View.VISIBLE
+            customViewCallback?.onCustomViewHidden()
+        }
+    }
+}
+
+
+
+
+
+
+
+"Agora, procederemos com a implementação da SplashActivity."
+
+
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.widget.VideoView
+import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Color
+import android.util.DisplayMetrics
+
+class SplashActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_splash)
+
+        // Torna a barra de notificação preta
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.decorView.systemUiVisibility =
+                android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            window.statusBarColor = Color.BLACK // Definir a cor da barra de status como preta
+        }
+
+        val videoView: VideoView = findViewById(R.id.splash_video_view)
+        val videoUri = Uri.parse("android.resource://" + packageName + "/" + R.raw.musica_de_abertura)
+        videoView.setVideoURI(videoUri)
+
+        // Listener para o término do vídeo
+        videoView.setOnCompletionListener {
+            // Navega para a MainActivity
+            startActivity(Intent(this, MainActivity::class.java))
+            finish() // Finaliza a SplashActivity
+        }
+
+        // Ajusta o tamanho do VideoView para que o vídeo ocupe a tela inteira sem cortar
+        setFullScreenVideo(videoView)
+
+        // Inicia a reprodução do vídeo
+        videoView.start()
+    }
+
+    private fun setFullScreenVideo(videoView: VideoView) {
+        // Obtém as dimensões da tela
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        // Ajusta o VideoView para preencher toda a tela
+        val layoutParams = videoView.layoutParams
+        layoutParams.width = screenWidth
+        layoutParams.height = screenHeight
+        videoView.layoutParams = layoutParams
+
+        // Ajusta o ScaleType para garantir que o vídeo preencha a tela inteira sem distorcer
+        videoView.setScaleX(1f)
+        videoView.setScaleY(1f)
+
+        // A lógica para manter a proporção do vídeo pode ser mais avançada dependendo da relação de aspecto do vídeo
+        // Por exemplo, para vídeos com aspect ratio 16:9, você pode calcular a altura ou a largura proporcionalmente
+    }
+}
